@@ -58,10 +58,10 @@ public sealed class DocTrWorkerTests
     }
 
     [Test]
-    public async Task ReusesWorkerAndPreservesUnicodePageOrderAndRotatedGeometry()
+    public async Task ReusesWorkerAndPreservesUnicodePageOrderAndRotatedGeometry(CancellationToken cancellationToken)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), CancellationToken.None, GetScript());
+        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
         await worker.Initialize(new DocTrOptions(), timeout.Token);
         string[] paths = ["C:\\folder with spaces\\résumé \"one\".png", "/tmp/中文.png"];
         DocTrResult result = await worker.Recognize(new DocTrRequest { Kind = "images", Paths = paths }, timeout.Token);
@@ -79,10 +79,10 @@ public sealed class DocTrWorkerTests
     }
 
     [Test]
-    public async Task PythonFailureIsReturnedWithItsCause()
+    public async Task PythonFailureIsReturnedWithItsCause(CancellationToken cancellationToken)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), CancellationToken.None, GetScript());
+        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
         await worker.Initialize(new DocTrOptions(), timeout.Token);
         try
         {
@@ -96,10 +96,10 @@ public sealed class DocTrWorkerTests
     }
 
     [Test]
-    public async Task UnexpectedExitIncludesStderr()
+    public async Task UnexpectedExitIncludesStderr(CancellationToken cancellationToken)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), CancellationToken.None, "import sys; sys.stdin.readline(); print('missing dependency', file=sys.stderr); sys.exit(7)");
+        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), cancellationToken, "import sys; sys.stdin.readline(); print('missing dependency', file=sys.stderr); sys.exit(7)");
         try
         {
             await worker.Initialize(new DocTrOptions(), timeout.Token);
@@ -113,10 +113,10 @@ public sealed class DocTrWorkerTests
     }
 
     [Test]
-    public async Task CancellationAndDisposalStopAHungWorker()
+    public async Task CancellationAndDisposalStopAHungWorker(CancellationToken cancellationToken)
     {
         using var startup = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), CancellationToken.None, GetScript());
+        var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
         try
         {
             await worker.Initialize(new DocTrOptions(), startup.Token);

@@ -4,13 +4,14 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Soenneker.DocTr.Util.Abstract;
 using Soenneker.DocTr.Util.Registrars;
+using System.Threading;
 
 namespace Soenneker.DocTr.Util.Tests;
 
 public sealed class DocTrUtilTests
 {
     [Test]
-    public async Task ModelReuseIsEnabledByDefaultAndCanBeDisabled()
+    public async Task ModelReuseIsEnabledByDefaultAndCanBeDisabled(CancellationToken cancellationToken)
     {
         string path = Path.GetTempFileName();
         try
@@ -19,8 +20,8 @@ public sealed class DocTrUtilTests
             {
                 var python = new DocTrTestPythonUtil(await PythonTestUtil.GetInterpreter());
                 await using var util = new DocTrUtil(python, new DocTrOptions { InstallDependencies = false, ReuseModels = reuse });
-                await util.Recognize(path);
-                await util.Recognize(path);
+                await util.Recognize(path, cancellationToken: cancellationToken);
+                await util.Recognize(path, cancellationToken: cancellationToken);
                 await Assert.That(python.SessionCount).IsEqualTo(reuse ? 1 : 2);
             }
         }
@@ -31,40 +32,40 @@ public sealed class DocTrUtilTests
     }
 
     [Test]
-    public async Task MissingDocumentDoesNotStartPython()
+    public async Task MissingDocumentDoesNotStartPython(CancellationToken cancellationToken)
     {
         await using var util = new DocTrUtil(new UnavailablePythonUtil());
         try
         {
-            await util.Recognize(Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".pdf"));
+            await util.Recognize(Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".pdf"), cancellationToken: cancellationToken);
             throw new Exception("Expected a missing document error.");
         }
         catch (FileNotFoundException) { }
     }
 
     [Test]
-    public async Task EmptyImagesAreRejected()
+    public async Task EmptyImagesAreRejected(CancellationToken cancellationToken)
     {
         await using var util = new DocTrUtil(new UnavailablePythonUtil());
         try
         {
-            await util.RecognizeImages([]);
+            await util.RecognizeImages([], cancellationToken: cancellationToken);
             throw new Exception("Expected an empty image collection error.");
         }
         catch (ArgumentException) { }
     }
 
     [Test]
-    public async Task PdfCannotBePassedAsAnImage()
+    public async Task PdfCannotBePassedAsAnImage(CancellationToken cancellationToken)
     {
         string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".PDF");
-        await File.WriteAllTextAsync(path, "not a real PDF");
+        await File.WriteAllTextAsync(path, "not a real PDF", cancellationToken: cancellationToken);
         try
         {
             await using var util = new DocTrUtil(new UnavailablePythonUtil());
             try
             {
-                await util.RecognizeImages([path]);
+                await util.RecognizeImages([path], cancellationToken: cancellationToken);
                 throw new Exception("Expected a PDF validation error.");
             }
             catch (ArgumentException) { }
@@ -76,20 +77,20 @@ public sealed class DocTrUtilTests
     }
 
     [Test]
-    public async Task DisposalIsIdempotentAndRejectsNewCalls()
+    public async Task DisposalIsIdempotentAndRejectsNewCalls(CancellationToken cancellationToken)
     {
         var util = new DocTrUtil(new UnavailablePythonUtil());
         await Task.WhenAll(util.DisposeAsync().AsTask(), util.DisposeAsync().AsTask());
         try
         {
-            await util.EnsureInstalled();
+            await util.EnsureInstalled(cancellationToken: cancellationToken);
             throw new Exception("Expected a disposed utility error.");
         }
         catch (ObjectDisposedException) { }
     }
 
     [Test]
-    public async Task RegistrationPreservesOptionsAndResolvesBothLifetimes()
+    public async Task RegistrationPreservesOptionsAndResolvesBothLifetimes(CancellationToken cancellationToken)
     {
         foreach (bool scoped in new[] { false, true })
         {
