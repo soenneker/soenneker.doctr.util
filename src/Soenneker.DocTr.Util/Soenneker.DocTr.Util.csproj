@@ -3,7 +3,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net11.0</TargetFramework>
-        <Features Condition="'$(TargetFramework)' == 'net11.0'">$(Features);runtime-async=on</Features>
+        <Features>$(Features);runtime-async=on</Features>
         <UseLocalPythonUtil Condition="'$(UseLocalPythonUtil)' == '' and Exists('..\..\..\..\Python\soenneker.python.util\src\Soenneker.Python.Util\Soenneker.Python.Util.csproj')">true</UseLocalPythonUtil>
         <Nullable>enable</Nullable>
         <Platforms>AnyCPU</Platforms>
