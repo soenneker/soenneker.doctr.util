@@ -48,7 +48,7 @@
     <ItemGroup>
         <PackageReference Include="Soenneker.Asyncs.Semaphores" Version="11.0.36" />
         <PackageReference Include="Soenneker.Atomics.ValueBools" Version="11.0.55" />
-        <PackageReference Include="Soenneker.Python.Util" Version="11.0.477" />
+        <PackageReference Include="Soenneker.Python.Util" Version="11.0.479" />
     </ItemGroup>
     <ItemGroup>
         <EmbeddedResource Include="Resources\doctr_worker.py" />
