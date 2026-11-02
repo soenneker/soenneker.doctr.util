@@ -10,7 +10,7 @@ namespace Soenneker.DocTr.Util.Tests;
 internal static class PythonTestUtil
 {
     public static PythonUtil CreateUtil() => new(new ProcessUtil(NullLogger<ProcessUtil>.Instance),
-        NullLogger<PythonUtil>.Instance, null!, null!);
+        NullLogger<PythonUtil>.Instance, null!, null!, null!);
     public static async ValueTask<string> GetInterpreter()
     {
         if (Environment.GetEnvironmentVariable("DOCTR_TEST_PYTHON") is { Length: > 0 } interpreter)
