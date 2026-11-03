@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.DocTr.Util.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Soenneker.Python.Util.Abstract;
 
 namespace Soenneker.DocTr.Util.Tests;
 
@@ -61,7 +63,8 @@ public sealed class DocTrWorkerTests
     public async Task ReusesWorkerAndPreservesUnicodePageOrderAndRotatedGeometry(CancellationToken cancellationToken)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
+        await using ServiceProvider provider = PythonTestUtil.CreateProvider();
+        await using var worker = await DocTrWorker.Start(provider.GetRequiredService<IPythonUtil>(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
         await worker.Initialize(new DocTrOptions(), timeout.Token);
         string[] paths = ["C:\\folder with spaces\\résumé \"one\".png", "/tmp/中文.png"];
         DocTrResult result = await worker.Recognize(new DocTrRequest { Kind = "images", Paths = paths }, timeout.Token);
@@ -82,7 +85,8 @@ public sealed class DocTrWorkerTests
     public async Task PythonFailureIsReturnedWithItsCause(CancellationToken cancellationToken)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
+        await using ServiceProvider provider = PythonTestUtil.CreateProvider();
+        await using var worker = await DocTrWorker.Start(provider.GetRequiredService<IPythonUtil>(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
         await worker.Initialize(new DocTrOptions(), timeout.Token);
         try
         {
@@ -99,7 +103,8 @@ public sealed class DocTrWorkerTests
     public async Task UnexpectedExitIncludesStderr(CancellationToken cancellationToken)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        await using var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), cancellationToken, "import sys; sys.stdin.readline(); print('missing dependency', file=sys.stderr); sys.exit(7)");
+        await using ServiceProvider provider = PythonTestUtil.CreateProvider();
+        await using var worker = await DocTrWorker.Start(provider.GetRequiredService<IPythonUtil>(), await PythonTestUtil.GetInterpreter(), cancellationToken, "import sys; sys.stdin.readline(); print('missing dependency', file=sys.stderr); sys.exit(7)");
         try
         {
             await worker.Initialize(new DocTrOptions(), timeout.Token);
@@ -116,7 +121,8 @@ public sealed class DocTrWorkerTests
     public async Task CancellationAndDisposalStopAHungWorker(CancellationToken cancellationToken)
     {
         using var startup = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        var worker = await DocTrWorker.Start(PythonTestUtil.CreateUtil(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
+        await using ServiceProvider provider = PythonTestUtil.CreateProvider();
+        var worker = await DocTrWorker.Start(provider.GetRequiredService<IPythonUtil>(), await PythonTestUtil.GetInterpreter(), cancellationToken, GetScript());
         try
         {
             await worker.Initialize(new DocTrOptions(), startup.Token);

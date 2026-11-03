@@ -6,7 +6,7 @@ using Soenneker.Python.Util.Abstract;
 
 namespace Soenneker.DocTr.Util.Tests;
 
-internal sealed class DocTrTestPythonUtil(string interpreter) : IPythonUtil
+internal sealed class DocTrTestPythonUtil(string interpreter, IPythonUtil pythonUtil) : IPythonUtil
 {
     public int SessionCount { get; private set; }
     public ValueTask<string> GetPythonPath(string pythonCommand = "python", CancellationToken cancellationToken = default) => ValueTask.FromResult(interpreter);
@@ -17,7 +17,7 @@ internal sealed class DocTrTestPythonUtil(string interpreter) : IPythonUtil
     public ValueTask<IPythonSession> StartSession(string pythonPath, string script, CancellationToken cancellationToken = default)
     {
         SessionCount++;
-        return PythonTestUtil.CreateUtil().StartSession(pythonPath, DocTrWorkerTests.GetScript(), cancellationToken);
+        return pythonUtil.StartSession(pythonPath, DocTrWorkerTests.GetScript(), cancellationToken);
     }
     public ValueTask<string> EnsureVirtualEnvironment(string pythonPath, string directory, TimeSpan? timeout = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public ValueTask InstallPackages(string pythonPath, IEnumerable<string> packages, string? indexUrl = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();

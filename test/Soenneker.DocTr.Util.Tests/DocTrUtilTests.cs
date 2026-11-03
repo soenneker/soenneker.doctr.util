@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Soenneker.DocTr.Util.Abstract;
 using Soenneker.DocTr.Util.Registrars;
 using System.Threading;
+using Soenneker.Python.Util.Abstract;
 
 namespace Soenneker.DocTr.Util.Tests;
 
@@ -18,7 +19,8 @@ public sealed class DocTrUtilTests
         {
             foreach (bool reuse in new[] { true, false })
             {
-                var python = new DocTrTestPythonUtil(await PythonTestUtil.GetInterpreter());
+                await using ServiceProvider provider = PythonTestUtil.CreateProvider();
+                var python = new DocTrTestPythonUtil(await PythonTestUtil.GetInterpreter(), provider.GetRequiredService<IPythonUtil>());
                 await using var util = new DocTrUtil(python, new DocTrOptions { InstallDependencies = false, ReuseModels = reuse });
                 await util.Recognize(path, cancellationToken: cancellationToken);
                 await util.Recognize(path, cancellationToken: cancellationToken);
