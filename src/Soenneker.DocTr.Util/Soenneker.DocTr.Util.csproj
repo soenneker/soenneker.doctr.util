@@ -46,7 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Soenneker.Python.Util" Version="11.0.493" />
+        <PackageReference Include="Soenneker.Python.Util" Version="11.0.495" />
     </ItemGroup>
     <ItemGroup>
         <EmbeddedResource Include="Resources\doctr_worker.py" />
